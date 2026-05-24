@@ -2,34 +2,46 @@ import User  from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 
-export const signup = async (req , res )=>{   
+export const signup = async (req , res ) => {   
     try {
-        const { username , fullname , email , password } = req.body  // destructuring from body 
+        const { username, fullname, email, password } = req.body  // destructuring from body 
+        const trimmedUsername = username?.trim()
+        const trimmedFullname = fullname?.trim()
+        const trimmedEmail = email?.trim().toLowerCase()
 
-        const emailregex= /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        const emailregex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-        if (!emailregex.test(email)){
-            return res.status(400).json({ error : " invalid email address"})
+        if (!trimmedEmail || !emailregex.test(trimmedEmail)) {
+            return res.status(400).json({ error: "invalid email address" })
+        }
+        if (!trimmedUsername) {
+            return res.status(400).json({ error: "username is required" })
+        }
+        if (!trimmedFullname) {
+            return res.status(400).json({ error: "full name is required" })
+        }
+        if (!password || password.length < 6) {
+            return res.status(400).json({ error: "password is too short" })
         }
 
-        const existingEmail = await User.findOne({email : email})
-        const existingUSerName = await User.findOne({ username : username})
+        const existingEmail = await User.findOne({ email: trimmedEmail })
+        const existingUserName = await User.findOne({ username: trimmedUsername })
 
-        if ( existingEmail || existingUSerName){
-            return res.status(400).json({ error : " username already exist"})
+        if (existingEmail) {
+            return res.status(400).json({ error: "email already exists" })
         }
-        if (password.length < 6 ){
-            return res.json({ error : " password is too short"})
+        if (existingUserName) {
+            return res.status(400).json({ error: "username already exists" })
         }
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash( password , salt)
+        const hashedPassword = await bcrypt.hash(password, salt)
 
-        const newUser= new User({
-            username : username ,
-            fullname : fullname ,
-            email : email ,
-            password : hashedPassword
+        const newUser = new User({
+            username: trimmedUsername,
+            fullname: trimmedFullname,
+            email: trimmedEmail,
+            password: hashedPassword
         })
 
         if(newUser) {
@@ -53,8 +65,16 @@ export const signup = async (req , res )=>{
 
     } catch (error) {
         console.log(`error in the signup control ${error}`)
-        res.status(500).json({error : "internal server error"}) 
-        
+        if (error.code === 11000) {
+            const duplicateField = Object.keys(error.keyValue || {})[0]
+            const message = duplicateField === "email"
+                ? "email already exists"
+                : duplicateField === "username"
+                    ? "username already exists"
+                    : "duplicate field value"
+            return res.status(400).json({ error: message })
+        }
+        res.status(500).json({ error: "internal server error" }) 
     } 
 }
 

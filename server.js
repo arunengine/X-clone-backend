@@ -1,5 +1,6 @@
 import express from "express"
 import dotenv from "dotenv"
+import cors from "cors"
 import { v2 as cloudinary } from "cloudinary"
 import cookieParser from "cookie-parser"
 import authRoute from "./routes/auth.routes.js"
@@ -20,6 +21,10 @@ const PORT = process.env.PORT || 5000
 
 app.use(express.json())
 app.use(cookieParser())
+app.use(cors({
+    origin: ["http://localhost:3000", "https://x-clone-frontend-sigma.vercel.app"],
+    credentials: true
+}))
 
 // Health check
 app.get("/", (req, res) => res.send("API is running"))
