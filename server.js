@@ -10,6 +10,7 @@ import postRoute from "./routes/post.routes.js"
 import notificationRoute from "./routes/notification.routes.js"
 
 dotenv.config()
+connectDB()
 cloudinary.config({
     cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
     api_key : process.env.CLOUDINARY_API_KEY,
@@ -34,7 +35,10 @@ app.use("/api/users", userRoute)
 app.use("/api/posts", postRoute)
 app.use("/api/notifications", notificationRoute)
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`)
-    connectDB()
-})
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`)
+    })
+}
+
+export default app;
