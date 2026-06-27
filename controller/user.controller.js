@@ -6,6 +6,9 @@ export const getProfile = async( req , res )=>{
     try {
         const {username} = req.params;
         const user = await User.findOne({username : username})
+            .populate("followers", "username fullname profileImg bio")
+            .populate("following", "username fullname profileImg bio")
+            .select("-password");
 
         if(!user){
             return res.status(400).json({ error : 'not found'})
