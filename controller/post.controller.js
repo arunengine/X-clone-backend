@@ -72,7 +72,7 @@ export const deletePost = async (req , res ) =>{
 
 export const createComment = async ( req , res )=>{
     try {
-        const {text} = req.body ;
+        const {text, parentId, replyToUsername} = req.body ;
         const postId = req.params.id;
         const userId = req.user._id ; 
 
@@ -88,7 +88,9 @@ export const createComment = async ( req , res )=>{
 
         const comment = {
             user : userId ,
-            text
+            text,
+            parentId: parentId || null,
+            replyToUsername: replyToUsername || null
         }
 
         post.comments.push(comment) ;
