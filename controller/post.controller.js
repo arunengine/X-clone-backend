@@ -54,13 +54,21 @@ export const deletePost = async (req , res ) =>{
             return res.status(401).json({ error : " u not authorised "})
         }
 
-        if(post.img){
-            const imgId = post.img.split("/").pop().split(".")[0]
-            await cloudinary.uploader.destroy(imgId)
+        // Delete from DB first — always succeeds regardless of Cloudinary
+        const imgUrl = post.img;
+        await Post.findByIdAndDelete({ _id : id})
+
+        // Then try to clean up from Cloudinary — failure won't affect the response
+        if(imgUrl){
+            try {
+                const imgId = imgUrl.split("/").pop().split(".")[0]
+                await cloudinary.uploader.destroy(imgId)
+            } catch (cloudErr) {
+                console.log("Cloudinary cleanup failed (non-fatal):", cloudErr.message)
+            }
         }
 
-        await Post.findByIdAndDelete({ _id : id})
-        res.status(200).json({message : "post deleted success fully"})
+        res.status(200).json({message : "post deleted successfully"})
 
     } catch (error) {
        console.log(`error in the deletePost controller ${error}`);
