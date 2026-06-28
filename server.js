@@ -20,10 +20,11 @@ cloudinary.config({
 const app = express()
 const PORT = process.env.PORT || 5000
 
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
+app.use(express.urlencoded({ limit: "10mb", extended: true }))
 app.use(cookieParser())
 app.use(cors({
-    origin: ["http://localhost:3000", "https://x-clone-frontend-sigma.vercel.app"],
+    origin: ["http://localhost:3000", "http://localhost:3001", "https://x-clone-frontend-sigma.vercel.app"],
     credentials: true
 }))
 
