@@ -175,3 +175,29 @@ export const searchUsers = async (req, res) => {
         res.status(500).json({ error: 'internal server error' });
     }
 }
+
+export const removeFollower = async (req, res) => {
+    try {
+        const { id } = req.params; // id = the follower to remove
+        const myId = req.user._id;
+
+        if (id === myId.toString()) {
+            return res.status(400).json({ error: "Cannot remove yourself" });
+        }
+
+        const followerUser = await User.findById(id);
+        if (!followerUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Remove followerUser from my followers list
+        await User.findByIdAndUpdate(myId, { $pull: { followers: id } });
+        // Remove me from their following list
+        await User.findByIdAndUpdate(id, { $pull: { following: myId } });
+
+        res.status(200).json({ message: "Follower removed" });
+    } catch (error) {
+        console.log(`error in removeFollower controller ${error}`);
+        res.status(500).json({ error: 'internal server error' });
+    }
+}
