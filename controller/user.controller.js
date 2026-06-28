@@ -155,3 +155,23 @@ export const updateUser = async( req , res )=>{
         res.status(500).json({error : "internal server errror"})
     }
 }
+
+export const searchUsers = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.trim().length === 0) {
+            return res.status(200).json([]);
+        }
+        const regex = new RegExp(q.trim(), 'i');
+        const users = await User.find({
+            $or: [{ username: regex }, { fullname: regex }],
+            _id: { $ne: req.user._id }
+        })
+        .select('username fullname profileImg bio')
+        .limit(8);
+        res.status(200).json(users);
+    } catch (error) {
+        console.log(`error in searchUsers controller ${error}`);
+        res.status(500).json({ error: 'internal server error' });
+    }
+}
