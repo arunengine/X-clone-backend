@@ -56,7 +56,7 @@ export const deletePost = async (req , res ) =>{
 
         // Delete from DB first — always succeeds regardless of Cloudinary
         const imgUrl = post.img;
-        await Post.findByIdAndDelete({ _id : id})
+        await Post.findByIdAndDelete(id)
 
         // Then try to clean up from Cloudinary — failure won't affect the response
         if(imgUrl){
