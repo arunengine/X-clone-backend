@@ -1,32 +1,30 @@
 import mongoose from "mongoose";
 
-// Cache the connection across Vercel serverless warm invocations
-let cached = global._mongoConn;
-if (!cached) {
-    cached = global._mongoConn = { conn: null, promise: null };
-}
-
+// Connect to MongoDB
+// Uses MONGO_URL from .env, falls back to local MongoDB if that fails
 const connectDB = async () => {
-    if (cached.conn) {
-        return cached.conn; // Reuse existing connection
+    const primaryUrl = process.env.MONGO_URL;
+    const localUrl = "mongodb://127.0.0.1:27017/twitter";
+
+    // Try the main URL first (Atlas or remote)
+    if (primaryUrl) {
+        try {
+            await mongoose.connect(primaryUrl);
+            console.log("Connected to MongoDB successfully");
+            return;
+        } catch (err) {
+            console.warn("Primary MongoDB failed:", err.message, "— trying local...");
+        }
     }
 
-    if (!cached.promise) {
-        cached.promise = mongoose
-            .connect(process.env.MONGO_URL)
-            .then((m) => {
-                console.log("connected to db");
-                return m;
-            })
-            .catch((err) => {
-                cached.promise = null;
-                console.log(`error in the db : ${err}`);
-                throw err;
-            });
+    // Fallback: try local MongoDB (useful during development)
+    try {
+        await mongoose.connect(localUrl);
+        console.log("Connected to local MongoDB (127.0.0.1:27017)");
+    } catch (err) {
+        console.error("Both MongoDB connections failed:", err.message);
+        process.exit(1); // Stop the server — can't run without a database
     }
-
-    cached.conn = await cached.promise;
-    return cached.conn;
 };
 
 export default connectDB;

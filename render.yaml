@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: x-clone-backend
+    runtime: node
+    region: singapore # closest to India — change to "ohio" for US users
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Set these manually in Render dashboard:
+      # MONGO_URL        → your MongoDB Atlas connection string
+      # JWT_SECRET       → your secret key
+      # CLOUDINARY_CLOUD_NAME
+      # CLOUDINARY_API_KEY
+      # CLOUDINARY_SECRET_KEY
+      # FRONTEND_URL     → your Netlify URL e.g. https://x-clone-yourname.netlify.app
