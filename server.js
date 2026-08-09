@@ -38,14 +38,16 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Render health checks) or Vercel domains
-        if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
-            callback(null, true)
+        // Allow requests with no origin (mobile apps, curl) or any vercel.app domain
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app") || origin.includes("vercel.app")) {
+            callback(null, origin || true)
         } else {
-            callback(new Error(`CORS: origin ${origin} not allowed`))
+            callback(null, false)
         }
     },
-    credentials: true // Required for cookies to work cross-origin
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"]
 }))
 
 // Connect to database middleware for serverless execution
