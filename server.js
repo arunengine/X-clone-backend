@@ -48,6 +48,17 @@ app.use(cors({
     credentials: true // Required for cookies to work cross-origin
 }))
 
+// Connect to database middleware for serverless execution
+app.use(async (req, res, next) => {
+    try {
+        await connectDB()
+        next()
+    } catch (err) {
+        console.error("Database Connection Error:", err.message)
+        res.status(500).json({ error: "Database connection failed: " + err.message })
+    }
+})
+
 // Health check route
 app.get("/", (req, res) => res.send("API is running"))
 
@@ -57,11 +68,13 @@ app.use("/api/users", userRoute)
 app.use("/api/posts", postRoute)
 app.use("/api/notifications", notificationRoute)
 
-// Connect to database first, then start the server
+// Connect to database first, then start the server (for standalone Node environments)
 connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`)
-    })
-})
+    if (process.env.NODE_ENV !== "production") {
+        app.listen(PORT, () => {
+            console.log(`Server is running on port ${PORT}`)
+        })
+    }
+}).catch((err) => console.error("Initial DB connection warning:", err.message))
 
 export default app

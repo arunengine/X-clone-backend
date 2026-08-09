@@ -1,29 +1,40 @@
 import mongoose from "mongoose";
 
-// Connect to MongoDB
-// Uses MONGO_URL from .env, falls back to local MongoDB if that fails
-const connectDB = async () => {
-    const primaryUrl = process.env.MONGO_URL;
-    const localUrl = "mongodb://127.0.0.1:27017/twitter";
+// Cache connection across serverless invocations (Vercel cold-starts)
+let isConnected = false;
 
-    // Try the main URL first (Atlas or remote)
-    if (primaryUrl) {
-        try {
-            await mongoose.connect(primaryUrl);
-            console.log("Connected to MongoDB successfully");
-            return;
-        } catch (err) {
-            console.warn("Primary MongoDB failed:", err.message, "— trying local...");
-        }
+const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) {
+        return;
     }
 
-    // Fallback: try local MongoDB (useful during development)
+    const primaryUrl = process.env.MONGO_URL;
+    if (!primaryUrl) {
+        throw new Error("MONGO_URL environment variable is not defined");
+    }
+
     try {
-        await mongoose.connect(localUrl);
-        console.log("Connected to local MongoDB (127.0.0.1:27017)");
+        await mongoose.connect(primaryUrl, {
+            serverSelectionTimeoutMS: 5000,
+        });
+        isConnected = true;
+        console.log("Connected to MongoDB Atlas successfully");
     } catch (err) {
-        console.error("Both MongoDB connections failed:", err.message);
-        process.exit(1); // Stop the server — can't run without a database
+        console.error("MongoDB Atlas connection failed:", err.message);
+        
+        // If in local development, try local fallback
+        if (process.env.NODE_ENV !== "production") {
+            try {
+                console.warn("Trying local MongoDB fallback...");
+                await mongoose.connect("mongodb://127.0.0.1:27017/twitter");
+                console.log("Connected to local MongoDB");
+                return;
+            } catch (localErr) {
+                console.error("Local MongoDB also failed:", localErr.message);
+            }
+        }
+
+        throw new Error(`MongoDB Connection Error: ${err.message}`);
     }
 };
 

@@ -120,8 +120,8 @@ export const login = async (req , res )=>{
     })
 
    } catch(error){
-        console.log(`error in the login control ${error}`)
-        res.status(500).json({error : "internal server error"}) 
+        console.log(`error in the login control ${error.message}`)
+        res.status(500).json({error : error.message || "internal server error"}) 
    }
 }
 
