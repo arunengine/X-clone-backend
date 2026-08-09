@@ -85,13 +85,14 @@ export const login = async (req , res )=>{
     let user = await User.findOne( {username : username})
 
     // Auto-create demo user on the fly if it doesn't exist yet in database
-    const demoAccounts = ["admin", "johndoe", "guest"];
+    const demoAccounts = ["johndoe", "janedoe", "guest"];
     if (!user && demoAccounts.includes(username?.toLowerCase()?.trim())) {
+        const lowerUser = username.toLowerCase().trim();
         const hashedPassword = await bcrypt.hash(password || "password123", 10);
         user = await User.create({
-            username: username.toLowerCase().trim(),
-            fullname: username === "admin" ? "Admin User" : username === "johndoe" ? "John Doe" : "Guest User",
-            email: `${username.toLowerCase().trim()}@example.com`,
+            username: lowerUser,
+            fullname: lowerUser === "johndoe" ? "John Doe" : lowerUser === "janedoe" ? "Jane Smith" : "Guest Account",
+            email: `${lowerUser}@example.com`,
             password: hashedPassword,
         });
     }
