@@ -30,7 +30,6 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }))
 app.use(cookieParser())
 
 // Allow cross-origin requests from the frontend
-// FRONTEND_URL is set as an env var on Render pointing to your Netlify URL
 const allowedOrigins = [
     "http://localhost:3000",
     "http://localhost:5173",
@@ -39,8 +38,8 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Render health checks)
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (mobile apps, curl, Render health checks) or Vercel domains
+        if (!origin || allowedOrigins.includes(origin) || origin.endsWith(".vercel.app")) {
             callback(null, true)
         } else {
             callback(new Error(`CORS: origin ${origin} not allowed`))
